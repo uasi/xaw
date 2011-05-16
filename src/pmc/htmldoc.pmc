@@ -1,0 +1,58 @@
+#include <parrot/parrot.h>
+#include <libxml/HTMLparser.h>
+
+#include "common.h"
+#include "pmc_xmldoc.h"
+
+
+#define DATA(self) (htmlDocPtr)PMC_data(self)
+
+
+pmclass HTMLDoc
+    extends XMLDoc
+    dynpmc
+    group libxml_group
+    lib xml2
+    auto_attrs {
+
+    VTABLE void destroy() {
+        htmlDocPtr ptr = DATA(SELF);
+        if (ptr) {
+            xmlFreeDoc(ptr);
+        }
+    }
+
+    VTABLE void *get_pointer() {
+        return DATA(SELF);
+    }
+
+    VTABLE void set_pointer(void *ptr) {
+        PMC_data(SELF) = ptr;
+    }
+
+    VTABLE STRING *get_string() {
+        htmlDocPtr ptr = DATA(SELF);
+        xmlChar *buffer;
+        int length;
+        const char *encoding = "utf-8";
+        int indent = 1;
+        STRING *string;
+
+        xmlDocDumpFormatMemoryEnc(ptr, &buffer, &length, encoding, indent);
+        string = Parrot_str_new(INTERP, (char *)buffer, (UINTVAL)length);
+        xmlFree(buffer);
+
+        return string;
+    }
+
+    METHOD child() {
+        htmlDocPtr ptr = DATA(SELF);
+        PMC *child = PMCNULL;
+        if (ptr->children) {
+            child = XMLNode_new(INTERP, ptr->children);
+        }
+        RETURN(PMC *child);
+    }
+}
+
+// vim: expandtab shiftwidth=4 softtabstop=4

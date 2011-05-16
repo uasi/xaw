@@ -1,0 +1,77 @@
+#include <parrot/parrot.h>
+#include <libxml/HTMLParser.h>
+
+#include "common.h"
+
+
+#define DATA(self) (xmlNodePtr)PMC_data(self)
+
+
+pmclass XMLNode
+    dynpmc
+    group libxml_group
+    lib xml2
+    auto_attrs {
+
+    VTABLE void destroy() {
+        xmlNodePtr node = DATA(SELF);
+	if (node) {
+            xmlFreeNode(node);
+	}
+    }
+
+    VTABLE void *get_pointer() {
+	return DATA(SELF);
+    }
+
+    VTABLE void set_pointer(void *data) {
+        PMC_data(SELF) = data;
+    }
+
+    METHOD STRING *name() {
+	xmlNodePtr node = DATA(SELF);
+	const xmlChar *name;
+	STRING *name_str;
+	switch (node->type) {
+	case XML_DOCUMENT_NODE:
+	case XML_HTML_DOCUMENT_NODE:
+#ifdef LIBXML_DOCB_ENABLED
+	case XML_DOCB_DOCUMENT_NODE:
+#endif
+	    name = ((xmlDocPtr)node)->URL;
+	    break;
+	case XML_ATTRIBUTE_NODE:
+	    name = ((xmlAttrPtr)node)->name;
+	    break;
+	case XML_NAMESPACE_DECL:
+	    name = ((xmlNsPtr)node)->prefix;
+	    break;
+	default:
+	    name = node->name;
+	    break;
+	}
+
+	name_str = Parrot_str_new(INTERP, (const char *)name, 0);
+	RETURN(STRING *name_str);
+    }
+
+    METHOD next() {
+        xmlNodePtr node = DATA(SELF);
+	PMC *nextNode = PMCNULL;
+	if (node->next) {
+	    nextNode = XMLNode_new(INTERP, node->next);
+	}
+	RETURN(PMC *nextNode);
+    }
+
+    METHOD path() {
+	xmlNodePtr node = DATA(SELF);
+	xmlChar *path = xmlGetNodePath(node);
+	STRING *path_str = STRINGNULL;
+	if (path) {
+	    path_str = Parrot_str_new(INTERP, (const char *)path, 0);
+	}
+	RETURN(STRING *path_str);
+    }
+}
+

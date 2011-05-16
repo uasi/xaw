@@ -1,0 +1,26 @@
+#include <parrot/parrot.h>
+#include <libxml/HTMLParser.h>
+
+
+#define DATA(self) (xmlDocPtr)PMC_data(self)
+
+
+pmclass XMLDoc
+    dynpmc
+    group libxml_group
+    lib xml2
+    auto_attrs {
+
+    VTABLE void destroy() {
+        xmlDocPtr doc = DATA(SELF);
+	if (doc) {
+            xmlFreeDoc(doc);
+	}
+    }
+
+    VTABLE void set_pointer(void *data) {
+        PMC_data(SELF) = data;
+    }
+
+    
+}

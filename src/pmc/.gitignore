@@ -1,0 +1,9 @@
+*.o
+*.bundle
+
+*.dump
+*_group.*
+pmc_*.h
+
+*.c
+!common.c

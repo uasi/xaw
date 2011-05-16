@@ -1,0 +1,43 @@
+#include <parrot/parrot.h>
+#include <libxml/HTMLparser.h>
+
+#include "common.h"
+
+
+#define DATA(self) (htmlParserCtxtPtr)PMC_data(self)
+
+
+pmclass HTMLParserContext
+    dynpmc
+    group libxml_group
+    lib xml2
+    auto_attrs {
+
+    VTABLE void init() {
+        // XXX error
+    }
+
+    VTABLE void init_pmc(PMC *pmc) {
+        STRING *filename;
+
+        if (!PMC_IS_TYPE(pmc, Hash)) {
+            // XXX error
+        }
+        filename = VTABLE_get_string_keyed_str(INTERP, pmc, CONST_STRING(INTERP, "file"));
+        // XXX check non-null
+        // PMC_data(SELF) = htmlCreateFileParserCtxt(Parrot_str_cstring(INTERP, filename), NULL);
+
+        //XXX htmlCtxtUseOptions(DATA(SELF), /* default options */);
+    }
+
+    VTABLE void destroy() {
+        htmlParserCtxtPtr ctxt = DATA(SELF);
+        if (ctxt) {
+            htmlFreeParserCtxt(ctxt);
+        }
+    }
+}
+
+
+// vim: expandtab shiftwidth=4 tabstop=4
+
