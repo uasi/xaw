@@ -1,8 +1,36 @@
 #include <parrot/parrot.h>
 #include <libxml/HTMLParser.h>
 
+#include "pmc_xmlnodeiter.h"
+#include "pmc_xmlnode.h"
+
 
 #define DATA(self) ((xmlDocPtr)PMC_data(self))
+
+
+BEGIN_PMC_HEADER_PREAMBLE
+
+#include <libxml/HTMLparser.h>
+PMC *XMLDoc_new(PARROT_INTERP, htmlDocPtr doc);
+
+END_PMC_HEADER_PREAMBLE
+
+
+PMC *XMLDoc_new(PARROT_INTERP, htmlDocPtr doc)
+{
+    INTVAL type;
+    PMC *doc_pmc;
+
+    /* If the doc already have a corresponding XMLDoc PMC, return it. */
+    if (doc->_private) {
+        return (PMC *)doc->_private;
+    }
+
+    type = Parrot_XMLDoc_get_vtable_pointer(interp)->base_type;
+    doc_pmc = Parrot_pmc_new(interp, type);
+    VTABLE_set_pointer(interp, doc_pmc, doc);
+    return doc_pmc;
+}
 
 
 pmclass XMLDoc
@@ -28,6 +56,21 @@ pmclass XMLDoc
     VTABLE void set_pointer(void *data) {
         PMC_data(SELF) = data;
         DATA(SELF)->_private = SELF;
+    }
+
+    METHOD child() {
+        xmlDocPtr ptr = DATA(SELF);
+        PMC *child = PMCNULL;
+        if (ptr->children) {
+            child = XMLNode_new(INTERP, ptr->children);
+        }
+        RETURN(PMC *child);
+    }
+
+    METHOD children() {
+        xmlDocPtr doc = DATA(SELF);
+        PMC *iter = XMLNodeIter_new(INTERP, SELF, doc->children);
+        RETURN(PMC *iter);
     }
 }
 

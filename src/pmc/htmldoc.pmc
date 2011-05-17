@@ -56,21 +56,6 @@ pmclass HTMLDoc
 
         return string;
     }
-
-    METHOD child() {
-        htmlDocPtr ptr = DATA(SELF);
-        PMC *child = PMCNULL;
-        if (ptr->children) {
-            child = XMLNode_new(INTERP, ptr->children);
-        }
-        RETURN(PMC *child);
-    }
-
-    METHOD children() {
-        htmlDocPtr doc = DATA(SELF);
-        PMC *iter = XMLNodeIter_new(INTERP, SELF, doc->children);
-        RETURN(PMC *iter);
-    }
 }
 
 // vim: expandtab shiftwidth=4 softtabstop=4
