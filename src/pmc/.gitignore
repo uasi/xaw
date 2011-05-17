@@ -7,3 +7,5 @@ pmc_*.h
 
 *.c
 !common.c
+
+Makefile
