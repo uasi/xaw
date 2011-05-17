@@ -1,0 +1,68 @@
+#include <parrot/parrot.h>
+#include <libxml/HTMLparser.h>
+
+#include "common.h"
+#include "pmc_xmlnode.h"
+
+
+BEGIN_PMC_HEADER_PREAMBLE
+
+#include <libxml/tree.h>
+PMC *XMLNodeIter_new(PARROT_INTERP, PMC *owner, xmlNodePtr nodes);
+
+END_PMC_HEADER_PREAMBLE
+
+
+PMC *XMLNodeIter_new(PARROT_INTERP, PMC *owner, xmlNodePtr nodes)
+{
+    INTVAL type = Parrot_XMLNodeIter_get_vtable_pointer(interp)->base_type;
+    PMC *iter = Parrot_pmc_new_init(interp, type, owner);
+    VTABLE_set_pointer(interp, iter, nodes);
+    return iter;
+}
+
+
+pmclass XMLNodeIter
+    extends Iterator
+    dynpmc
+    group libxml_group
+    lib xml2
+    auto_attrs {
+
+    ATTR PMC *owner;
+    ATTR xmlNodePtr nodes;
+
+    VTABLE void init_pmc(PMC *pmc) {
+        SET_ATTR_owner(INTERP, SELF, pmc);
+    }
+
+    VTABLE void *get_pointer() {
+        xmlNodePtr ptr;
+        GET_ATTR_nodes(INTERP, SELF, ptr);
+        return ptr;
+    }
+
+    VTABLE void set_pointer(void *ptr) {
+        SET_ATTR_nodes(INTERP, SELF, (xmlNodePtr)ptr);
+    }
+
+    VTABLE INTVAL get_bool() {
+        xmlNodePtr nodes;
+        GET_ATTR_nodes(INTERP, SELF, nodes);
+        return nodes != NULL;
+    }
+
+    VTABLE PMC *shift_pmc() {
+        PMC *node_pmc = PMCNULL;
+        xmlNodePtr nodes;
+        GET_ATTR_nodes(INTERP, SELF, nodes);
+        if (nodes) {
+            node_pmc = XMLNode_new(INTERP, nodes);
+            nodes++;
+            SET_ATTR_nodes(INTERP, SELF, nodes);
+        }
+        return node_pmc;
+    }
+}
+	
+// vim: expandtab shiftwidth=4 softtabstop=4
