@@ -8,16 +8,16 @@
 BEGIN_PMC_HEADER_PREAMBLE
 
 #include <libxml/tree.h>
-PMC *XMLNodeIter_new(PARROT_INTERP, PMC *owner, xmlNodePtr nodes);
+PMC *XMLNodeIter_new(PARROT_INTERP, PMC *owner, xmlNodePtr first_node);
 
 END_PMC_HEADER_PREAMBLE
 
 
-PMC *XMLNodeIter_new(PARROT_INTERP, PMC *owner, xmlNodePtr nodes)
+PMC *XMLNodeIter_new(PARROT_INTERP, PMC *owner, xmlNodePtr first_node)
 {
     INTVAL type = Parrot_XMLNodeIter_get_vtable_pointer(interp)->base_type;
     PMC *iter = Parrot_pmc_new_init(interp, type, owner);
-    VTABLE_set_pointer(interp, iter, nodes);
+    VTABLE_set_pointer(interp, iter, first_node);
     return iter;
 }
 
@@ -30,7 +30,8 @@ pmclass XMLNodeIter
     auto_attrs {
 
     ATTR PMC *owner;
-    ATTR xmlNodePtr nodes;
+    ATTR xmlNodePtr first_node;
+    ATTR xmlNodePtr cur_node;
 
     VTABLE void init_pmc(PMC *pmc) {
         if (PMC_IS_NULL(pmc)) {
@@ -51,30 +52,43 @@ pmclass XMLNodeIter
 
     VTABLE void *get_pointer() {
         xmlNodePtr ptr;
-        GET_ATTR_nodes(INTERP, SELF, ptr);
+        GET_ATTR_first_node(INTERP, SELF, ptr);
         return ptr;
     }
 
     VTABLE void set_pointer(void *ptr) {
-        SET_ATTR_nodes(INTERP, SELF, (xmlNodePtr)ptr);
+        SET_ATTR_first_node(INTERP, SELF, (xmlNodePtr)ptr);
+        SET_ATTR_cur_node(INTERP, SELF, (xmlNodePtr)ptr);
     }
 
     VTABLE INTVAL get_bool() {
-        xmlNodePtr nodes;
-        GET_ATTR_nodes(INTERP, SELF, nodes);
-        return nodes != NULL;
+        xmlNodePtr cur_node;
+        GET_ATTR_first_node(INTERP, SELF, cur_node);
+        return cur_node != NULL;
     }
 
     VTABLE PMC *shift_pmc() {
         PMC *node_pmc = PMCNULL;
-        xmlNodePtr nodes;
-        GET_ATTR_nodes(INTERP, SELF, nodes);
-        if (nodes) {
-            node_pmc = XMLNode_new(INTERP, nodes);
-            nodes++;
-            SET_ATTR_nodes(INTERP, SELF, nodes);
+        xmlNodePtr cur_node;
+        GET_ATTR_cur_node(INTERP, SELF, cur_node);
+        if (cur_node) {
+            node_pmc = XMLNode_new(INTERP, cur_node);
+            cur_node++;
+            SET_ATTR_cur_node(INTERP, SELF, cur_node);
         }
         return node_pmc;
+    }
+
+    VTABLE void set_integer_native(INTVAL value) {
+        xmlNodePtr first_node;
+
+        if (value != ITERATE_FROM_START) {
+            Parrot_ex_throw_from_c_args(INTERP, NULL, EXCEPTION_INVALID_OPERATION,
+                    "Wrong direction for XMLNodeIter");
+        }
+
+        GET_ATTR_first_node(INTERP, SELF, first_node);
+        SET_ATTR_cur_node(INTERP, SELF, first_node);
     }
 }
 	
