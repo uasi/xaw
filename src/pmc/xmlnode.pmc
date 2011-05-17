@@ -4,7 +4,7 @@
 #include "common.h"
 
 
-#define DATA(self) (xmlNodePtr)PMC_data(self)
+#define DATA(self) ((xmlNodePtr)PMC_data(self))
 
 
 BEGIN_PMC_HEADER_PREAMBLE
@@ -17,10 +17,25 @@ END_PMC_HEADER_PREAMBLE
 
 PMC *XMLNode_new(PARROT_INTERP, xmlNodePtr node)
 {
-    INTVAL type = Parrot_XMLNode_get_vtable_pointer(interp)->base_type;
-    PMC *node_pmc = Parrot_pmc_new(interp, type);
+    INTVAL type;
+    PMC *node_pmc;
+
+    /* If the node already have a corresponding XMLNode PMC, return it. */
+    if (node->_private) {
+        return (PMC *)node->_private;
+    }
+
+    type = Parrot_XMLNode_get_vtable_pointer(interp)->base_type;
+    node_pmc = Parrot_pmc_new(interp, type);
     VTABLE_set_pointer(interp, node_pmc, node);
     return node_pmc;
+}
+
+static void deregister_xml_node(xmlNodePtr node)
+{
+    if (node->_private) {
+        PMC_data((PMC *)node->_private) = NULL;
+    }
 }
 
 
@@ -30,11 +45,35 @@ pmclass XMLNode
     lib xml2
     auto_attrs {
 
+    void class_init(PARROT_INTERP, int entry) {
+        xmlDeregisterNodeDefault(deregister_xml_node);
+        xmlThrDefDeregisterNodeDefault(deregister_xml_node);
+    }
+
+    VTABLE void init() {
+        PObj_custom_mark_destroy_SETALL(SELF);
+    }
+
+    VTABLE void mark() {
+        xmlNodePtr node = DATA(SELF);
+        if (!node) return;
+
+        if (node->doc && node->doc->_private) {
+            Parrot_gc_mark_PMC_alive(INTERP, (PMC *)node->doc->_private);
+        }
+        if (node->parent && node->parent->_private) {
+            Parrot_gc_mark_PMC_alive(INTERP, (PMC *)node->parent->_private);
+        }
+    }
+
     VTABLE void destroy() {
         xmlNodePtr node = DATA(SELF);
-	if (node) {
+        if (!node) return;
+
+        node->_private = NULL;
+        if (!node->parent) {
             xmlFreeNode(node);
-	}
+        }
     }
 
     VTABLE void *get_pointer() {
@@ -43,6 +82,7 @@ pmclass XMLNode
 
     VTABLE void set_pointer(void *data) {
         PMC_data(SELF) = data;
+        DATA(SELF)->_private = SELF;
     }
 
     METHOD STRING *name() {
@@ -92,3 +132,4 @@ pmclass XMLNode
     }
 }
 
+// vim: expandtab shiftwidth=4 softtabstop=4

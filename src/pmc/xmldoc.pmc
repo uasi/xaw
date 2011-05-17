@@ -2,7 +2,7 @@
 #include <libxml/HTMLParser.h>
 
 
-#define DATA(self) (xmlDocPtr)PMC_data(self)
+#define DATA(self) ((xmlDocPtr)PMC_data(self))
 
 
 pmclass XMLDoc
@@ -11,16 +11,24 @@ pmclass XMLDoc
     lib xml2
     auto_attrs {
 
+    VTABLE void init() {
+        PObj_custom_destroy_SET(SELF);
+    }
+
     VTABLE void destroy() {
         xmlDocPtr doc = DATA(SELF);
-	if (doc) {
-            xmlFreeDoc(doc);
-	}
+        doc->_private = NULL;
+        xmlFreeDoc(doc);
+    }
+
+    VTABLE void *get_pointer() {
+        return DATA(SELF);
     }
 
     VTABLE void set_pointer(void *data) {
         PMC_data(SELF) = data;
+        DATA(SELF)->_private = SELF;
     }
-
-    
 }
+
+// vim: expandtab shiftwidth=4 softtabstop=4

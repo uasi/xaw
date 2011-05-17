@@ -33,7 +33,20 @@ pmclass XMLNodeIter
     ATTR xmlNodePtr nodes;
 
     VTABLE void init_pmc(PMC *pmc) {
+        if (PMC_IS_NULL(pmc)) {
+            Parrot_ex_throw_from_c_args(INTERP, NULL, EXCEPTION_INVALID_OPERATION,
+                    "Cannot initialize XMLNodeIter with null PMC");
+        }
+
         SET_ATTR_owner(INTERP, SELF, pmc);
+
+        PObj_custom_mark_SET(SELF);
+    }
+
+    VTABLE void mark() {
+        PMC *owner;
+        GET_ATTR_owner(INTERP, SELF, owner);
+        Parrot_gc_mark_PMC_alive(INTERP, owner);
     }
 
     VTABLE void *get_pointer() {

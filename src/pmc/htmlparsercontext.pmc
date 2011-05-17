@@ -4,7 +4,7 @@
 #include "common.h"
 
 
-#define DATA(self) (htmlParserCtxtPtr)PMC_data(self)
+#define DATA(self) ((htmlParserCtxtPtr)PMC_data(self))
 
 
 pmclass HTMLParserContext
@@ -12,10 +12,6 @@ pmclass HTMLParserContext
     group libxml_group
     lib xml2
     auto_attrs {
-
-    VTABLE void init() {
-        // XXX error
-    }
 
     VTABLE void init_pmc(PMC *pmc) {
         STRING *filename;
@@ -28,13 +24,13 @@ pmclass HTMLParserContext
         // PMC_data(SELF) = htmlCreateFileParserCtxt(Parrot_str_cstring(INTERP, filename), NULL);
 
         //XXX htmlCtxtUseOptions(DATA(SELF), /* default options */);
+
+        PObj_custom_destroy_SET(SELF);
     }
 
     VTABLE void destroy() {
         htmlParserCtxtPtr ctxt = DATA(SELF);
-        if (ctxt) {
-            htmlFreeParserCtxt(ctxt);
-        }
+        htmlFreeParserCtxt(ctxt);
     }
 }
 

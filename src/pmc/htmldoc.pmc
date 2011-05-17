@@ -7,7 +7,7 @@
 #include "pmc_xmlnode.h"
 
 
-#define DATA(self) (htmlDocPtr)PMC_data(self)
+#define DATA(self) ((htmlDocPtr)PMC_data(self))
 
 
 BEGIN_PMC_HEADER_PREAMBLE
@@ -20,8 +20,16 @@ END_PMC_HEADER_PREAMBLE
 
 PMC *HTMLDoc_new(PARROT_INTERP, htmlDocPtr doc)
 {
-    INTVAL type = Parrot_HTMLDoc_get_vtable_pointer(interp)->base_type;
-    PMC *doc_pmc = Parrot_pmc_new(interp, type);
+    INTVAL type;
+    PMC *doc_pmc;
+
+    /* If the doc already have a corresponding HTMLDoc PMC, return it. */
+    if (doc->_private) {
+        return (PMC *)doc->_private;
+    }
+
+    type = Parrot_HTMLDoc_get_vtable_pointer(interp)->base_type;
+    doc_pmc = Parrot_pmc_new(interp, type);
     VTABLE_set_pointer(interp, doc_pmc, doc);
     return doc_pmc;
 }
@@ -33,21 +41,6 @@ pmclass HTMLDoc
     group libxml_group
     lib xml2
     auto_attrs {
-
-    VTABLE void destroy() {
-        htmlDocPtr ptr = DATA(SELF);
-        if (ptr) {
-            xmlFreeDoc(ptr);
-        }
-    }
-
-    VTABLE void *get_pointer() {
-        return DATA(SELF);
-    }
-
-    VTABLE void set_pointer(void *ptr) {
-        PMC_data(SELF) = ptr;
-    }
 
     VTABLE STRING *get_string() {
         htmlDocPtr ptr = DATA(SELF);
