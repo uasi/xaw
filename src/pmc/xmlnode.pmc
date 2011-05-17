@@ -7,6 +7,23 @@
 #define DATA(self) (xmlNodePtr)PMC_data(self)
 
 
+BEGIN_PMC_HEADER_PREAMBLE
+
+#include <libxml/tree.h>
+PMC *XMLNode_new(PARROT_INTERP, xmlNodePtr node);
+
+END_PMC_HEADER_PREAMBLE
+
+
+PMC *XMLNode_new(PARROT_INTERP, xmlNodePtr node)
+{
+    INTVAL type = Parrot_XMLNode_get_vtable_pointer(interp)->base_type;
+    PMC *node_pmc = Parrot_pmc_new(interp, type);
+    VTABLE_set_pointer(interp, node_pmc, node);
+    return node_pmc;
+}
+
+
 pmclass XMLNode
     dynpmc
     group libxml_group
