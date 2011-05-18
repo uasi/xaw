@@ -41,6 +41,8 @@ LINKARGS        = -lxml2 $(LDFLAGS) $(LD_LOAD_FLAGS) $(LIBPARROT)
 DYNPMC_GROUP = $(PRODUCT_NAME)_group
 
 PMC_SOURCES = \
+	      xpathobject.pmc \
+	      xpath.pmc \
 	      xmlnodeiter.pmc \
 	      xmlnode.pmc \
 	      xmldoc.pmc \
@@ -88,6 +90,8 @@ compile: generate
 	$(CC) $(CC_OUT)htmldoc$(O) $(INCLUDES) $(CFLAGS) htmldoc.c
 	$(CC) $(CC_OUT)htmlparsercontext$(O) $(INCLUDES) $(CFLAGS) htmlparsercontext.c
 	$(CC) $(CC_OUT)htmlparser$(O) $(INCLUDES) $(CFLAGS) htmlparser.c
+	$(CC) $(CC_OUT)xpathobject$(O) $(INCLUDES) $(CFLAGS) xpathobject.c
+	$(CC) $(CC_OUT)xpath$(O) $(INCLUDES) $(CFLAGS) xpath.c
 	$(CC) $(CC_OUT)xmldoc$(O) $(INCLUDES) $(CFLAGS) xmldoc.c
 	$(CC) $(CC_OUT)xmlnodeiter$(O) $(INCLUDES) $(CFLAGS) xmlnodeiter.c
 	$(CC) $(CC_OUT)xmlnode$(O) $(INCLUDES) $(CFLAGS) xmlnode.c

@@ -8,7 +8,7 @@ PRODUCT_NAME  = libxml
 PARROT_ARGS   =
 
 ## configuration settings
-VERSION       = /3.3.0-devel
+VERSION       = /3.4.0-devel
 BIN_DIR       = /Users/uasi/Dev/Projects/rakudo/parrot_install/bin
 LIB_DIR       = /Users/uasi/Dev/Projects/rakudo/parrot_install/lib$(VERSION)
 DOC_DIR       = /Users/uasi/Dev/Projects/rakudo/parrot_install/share/doc$(VERSION)

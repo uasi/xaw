@@ -1,0 +1,81 @@
+#include <parrot/parrot.h>
+#include <libxml/xpath.h>
+
+#include "pmc_xpathobject.h"
+#include "pmc_xmldoc.h"
+#include "pmc_xmlnode.h"
+#include "pmc_htmldoc.h"
+
+
+BEGIN_PMC_HEADER_PREAMBLE
+
+#include <libxml/xpath.h>
+
+END_PMC_HEADER_PREAMBLE
+
+
+pmclass XPath
+    dynpmc
+    group libxml_group
+    lib xml2
+    auto_attrs {
+
+    ATTR xmlXPathContextPtr context;
+    ATTR PMC *doc;
+
+    VTABLE void init_pmc(PMC *pmc) {
+        PMC *doc_pmc = PMCNULL;
+        xmlXPathContextPtr context;
+
+        if (VTABLE_isa(INTERP, pmc, CONST_STRING(INTERP, "XMLDoc"))) {
+            doc = pmc;
+        }
+        else if (VTABLE_isa(INTERP, pmc, CONST_STRING(INTERP, "XMLNode"))) {
+            (PMC *doc) = PCCINVOKE(INTERP, pmc, "doc");
+            if (PMC_IS_NULL(doc)) {
+                /* XXX doc must not be NULL */
+            }
+        }
+        else {
+            /* XXX pmc must be either XMLDoc or XMLNode */
+        }
+
+        context = xmlXPathNewContext((xmlDocPtr)VTABLE_get_pointer(INTERP, doc));
+
+        SET_ATTR_context(INTERP, SELF, context);
+        SET_ATTR_doc(INTERP, SELF, doc);
+
+        PObj_custom_mark_destroy_SETALL(SELF);
+    }
+
+    VTABLE void mark() {
+        PMC *doc;
+        GET_ATTR_doc(INTERP, SELF, doc);
+        Parrot_gc_mark_PMC_alive(INTERP, doc);
+    }
+
+    VTABLE void destroy() {
+        xmlXPathContextPtr context;
+        GET_ATTR_context(INTERP, SELF, context);
+        xmlXPathFreeContext(context);
+    }
+
+    METHOD find(STRING *xpath) {
+        xmlXPathContextPtr context;
+        xmlXPathObjectPtr object;
+        PMC *object_pmc;
+        PMC *doc;
+
+        GET_ATTR_context(INTERP, SELF, context);
+        object = xmlXPathEval((const xmlChar *)Parrot_str_cstring(INTERP, xpath), context);
+
+        if (!object) {
+            /* XXX raise */
+        }
+
+        GET_ATTR_doc(INTERP, SELF, doc);
+        object_pmc = XPathObject_new(INTERP, object, doc);
+
+        RETURN(PMC *object_pmc);
+    }
+}
