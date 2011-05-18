@@ -1,0 +1,48 @@
+#include <parrot/parrot.h>
+#include <libxml/tree.h>
+
+
+#define DATA(self) ((xmlNsPtr)PMC_data(self))
+
+
+BEGIN_PMC_HEADER_PREAMBLE
+
+#include <libxml/tree.h>
+PMC *XMLNamespace_new(PARROT_INTERP, xmlNsPtr namespace);
+
+END_PMC_HEADER_PREAMBLE
+
+
+PMC *XMLNamespace_new(PARROT_INTERP, xmlNsPtr namespace)
+{
+    INTVAL type = Parrot_XMLNamespace_get_vtable_pointer(interp)->base_type;
+    PMC *namespace_pmc = Parrot_pmc_new(interp, type);
+    VTABLE_set_pointer(interp, namespace_pmc, namespace);
+    return namespace_pmc;
+}
+
+
+pmclass XMLNamespace
+    dynpmc
+    group libxml_group
+    lib xml2
+    auto_namespaces {
+
+    VTABLE void init() {
+        PObj_custom_destroy_SET(SELF);
+    }
+
+    VTABLE void destroy() {
+        xmlNsPtr namespace;
+        namespace = DATA(SELF);
+        xmlFreeNs(namespace);
+    }
+
+    VTABLE void *get_pointer() {
+        return DATA(SELF);
+    }
+
+    VTABLE void set_pointer(void *ptr) {
+        PMC_data(SELF) = (xmlNsPtr)ptr;
+    }
+}

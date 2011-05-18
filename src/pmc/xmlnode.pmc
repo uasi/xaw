@@ -79,7 +79,7 @@ pmclass XMLNode
     }
 
     VTABLE void *get_pointer() {
-	return DATA(SELF);
+        return DATA(SELF);
     }
 
     VTABLE void set_pointer(void *data) {
@@ -87,32 +87,57 @@ pmclass XMLNode
         DATA(SELF)->_private = SELF;
     }
 
-    METHOD STRING *name() {
-	xmlNodePtr node = DATA(SELF);
-	const xmlChar *name;
-	STRING *name_str;
-        
-	switch (node->type) {
-	case XML_DOCUMENT_NODE:
-	case XML_HTML_DOCUMENT_NODE:
-#ifdef LIBXML_DOCB_ENABLED
-	case XML_DOCB_DOCUMENT_NODE:
-#endif
-	    name = ((xmlDocPtr)node)->URL;
-	    break;
-	case XML_ATTRIBUTE_NODE:
-	    name = ((xmlAttrPtr)node)->name;
-	    break;
-	case XML_NAMESPACE_DECL:
-	    name = ((xmlNsPtr)node)->prefix;
-	    break;
-	default:
-	    name = node->name;
-	    break;
-	}
+    VTABLE INTVAL get_integer() {
+        return (INTVAL)DATA(SELF)->type;
+    }
 
-	name_str = Parrot_str_new(INTERP, (const char *)name, 0);
-	RETURN(STRING *name_str);
+    METHOD type() {
+        INTVAL type;
+        type = VTABLE_get_integer(INTERP, SELF);
+        RETURN(INTVAL type);
+    }
+
+    METHOD name() {
+        xmlNodePtr node = DATA(SELF);
+        const xmlChar *name;
+        STRING *name_str;
+            
+        switch (node->type) {
+        case XML_DOCUMENT_NODE:
+        case XML_HTML_DOCUMENT_NODE:
+#ifdef LIBXML_DOCB_ENABLED
+        case XML_DOCB_DOCUMENT_NODE:
+#endif
+            name = ((xmlDocPtr)node)->URL;
+            break;
+        case XML_ATTRIBUTE_NODE:
+            name = ((xmlAttrPtr)node)->name;
+            break;
+        case XML_NAMESPACE_DECL:
+            name = ((xmlNsPtr)node)->prefix;
+            break;
+        default:
+            name = node->name;
+            break;
+        }
+
+        name_str = Parrot_str_new(INTERP, (const char *)name, 0);
+        RETURN(STRING *name_str);
+    }
+
+    METHOD content() {
+        xmlNodePtr node = DATA(SELF);
+        xmlChar *content;
+        STRING *content_str = STRINGNULL;
+
+        content = xmlNodeGetContent(node);
+
+        if (content) {
+            content_str = Parrot_str_new(INTERP, (const char *)content, 0);
+            xmlFree(content);
+        }
+
+        RETURN(STRING *content_str);
     }
 
     METHOD doc() {
@@ -144,39 +169,39 @@ pmclass XMLNode
 
     METHOD parent() {
         xmlNodePtr node = DATA(SELF);
-	PMC *parent_node_pmc = PMCNULL;
-	if (node->parent) {
-	    parent_node_pmc = XMLNode_new(INTERP, node->parent);
-	}
-	RETURN(PMC *parent_node_pmc);
+        PMC *parent_node_pmc = PMCNULL;
+        if (node->parent) {
+            parent_node_pmc = XMLNode_new(INTERP, node->parent);
+        }
+        RETURN(PMC *parent_node_pmc);
     }
 
     METHOD next() {
         xmlNodePtr node = DATA(SELF);
-	PMC *next_node_pmc = PMCNULL;
-	if (node->next) {
-	    next_node_pmc = XMLNode_new(INTERP, node->next);
-	}
-	RETURN(PMC *next_node_pmc);
+        PMC *next_node_pmc = PMCNULL;
+        if (node->next) {
+            next_node_pmc = XMLNode_new(INTERP, node->next);
+        }
+        RETURN(PMC *next_node_pmc);
     }
 
     METHOD prev() {
         xmlNodePtr node = DATA(SELF);
-	PMC *prev_node_pmc = PMCNULL;
-	if (node->prev) {
-	    prev_node_pmc = XMLNode_new(INTERP, node->prev);
-	}
-	RETURN(PMC *prev_node_pmc);
+        PMC *prev_node_pmc = PMCNULL;
+        if (node->prev) {
+            prev_node_pmc = XMLNode_new(INTERP, node->prev);
+        }
+        RETURN(PMC *prev_node_pmc);
     }
 
     METHOD path() {
-	xmlNodePtr node = DATA(SELF);
-	xmlChar *path = xmlGetNodePath(node);
-	STRING *path_str = STRINGNULL;
-	if (path) {
-	    path_str = Parrot_str_new(INTERP, (const char *)path, 0);
-	}
-	RETURN(STRING *path_str);
+        xmlNodePtr node = DATA(SELF);
+        xmlChar *path = xmlGetNodePath(node);
+        STRING *path_str = STRINGNULL;
+        if (path) {
+            path_str = Parrot_str_new(INTERP, (const char *)path, 0);
+        }
+        RETURN(STRING *path_str);
     }
 
     METHOD find(STRING *xpath_str) {

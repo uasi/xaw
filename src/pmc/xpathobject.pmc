@@ -3,6 +3,8 @@
 
 #include "pmc_xmldoc.h"
 #include "pmc_xmlnode.h"
+#include "pmc_xmlattr.h"
+#include "pmc_xmlnamespace.h"
 
 
 BEGIN_PMC_HEADER_PREAMBLE
@@ -113,11 +115,9 @@ pmclass XPathObject
 
         switch (node->type) {
         case XML_ATTRIBUTE_NODE:
-            /* NYI */
-            return PMCNULL;
+            return XMLAttr_new(INTERP, (xmlAttrPtr)node);
         case XML_NAMESPACE_DECL:
-            /* NYI */
-            return PMCNULL;
+            return XMLNamespace_new(INTERP, (xmlNsPtr)node);
         default:
             return XMLNode_new(INTERP, node);
         }

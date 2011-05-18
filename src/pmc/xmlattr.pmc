@@ -1,0 +1,48 @@
+#include <parrot/parrot.h>
+#include <libxml/tree.h>
+
+
+#define DATA(self) ((xmlAttrPtr)PMC_data(self))
+
+
+BEGIN_PMC_HEADER_PREAMBLE
+
+#include <libxml/tree.h>
+PMC *XMLAttr_new(PARROT_INTERP, xmlAttrPtr attr);
+
+END_PMC_HEADER_PREAMBLE
+
+
+PMC *XMLAttr_new(PARROT_INTERP, xmlAttrPtr attr)
+{
+    INTVAL type = Parrot_XMLAttr_get_vtable_pointer(interp)->base_type;
+    PMC *attr_pmc = Parrot_pmc_new(interp, type);
+    VTABLE_set_pointer(interp, attr_pmc, attr);
+    return attr_pmc;
+}
+
+
+pmclass XMLAttr
+    dynpmc
+    group libxml_group
+    lib xml2
+    auto_attrs {
+
+    VTABLE void init() {
+        PObj_custom_destroy_SET(SELF);
+    }
+
+    VTABLE void destroy() {
+        xmlAttrPtr attr;
+        attr = DATA(SELF);
+        xmlFreeProp(attr); /* XXX or xmlFreePropList? */
+    }
+
+    VTABLE void *get_pointer() {
+        return DATA(SELF);
+    }
+
+    VTABLE void set_pointer(void *ptr) {
+        PMC_data(SELF) = (xmlAttrPtr)ptr;
+    }
+}

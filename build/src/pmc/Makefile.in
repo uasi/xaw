@@ -43,6 +43,8 @@ DYNPMC_GROUP = $(PRODUCT_NAME)_group
 PMC_SOURCES = \
 	      xpathobject.pmc \
 	      xpath.pmc \
+	      xmlnamespace.pmc \
+	      xmlattr.pmc \
 	      xmlnodeiter.pmc \
 	      xmlnode.pmc \
 	      xmldoc.pmc \
@@ -93,6 +95,8 @@ compile: generate
 	$(CC) $(CC_OUT)xpathobject$(O) $(INCLUDES) $(CFLAGS) xpathobject.c
 	$(CC) $(CC_OUT)xpath$(O) $(INCLUDES) $(CFLAGS) xpath.c
 	$(CC) $(CC_OUT)xmldoc$(O) $(INCLUDES) $(CFLAGS) xmldoc.c
+	$(CC) $(CC_OUT)xmlnamespace$(O) $(INCLUDES) $(CFLAGS) xmlnamespace.c
+	$(CC) $(CC_OUT)xmlattr$(O) $(INCLUDES) $(CFLAGS) xmlattr.c
 	$(CC) $(CC_OUT)xmlnodeiter$(O) $(INCLUDES) $(CFLAGS) xmlnodeiter.c
 	$(CC) $(CC_OUT)xmlnode$(O) $(INCLUDES) $(CFLAGS) xmlnode.c
 	$(CC) $(CC_OUT)lib-$(DYNPMC_GROUP)$(O) $(INCLUDES) $(CFLAGS) $(DYNPMC_GROUP).c
