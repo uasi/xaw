@@ -3,6 +3,7 @@
 
 #include "pmc_xmlnodeiter.h"
 #include "pmc_xmlnode.h"
+#include "pmc_xpath.h"
 
 
 #define DATA(self) ((xmlDocPtr)PMC_data(self))
@@ -71,6 +72,16 @@ pmclass XMLDoc
         xmlDocPtr doc = DATA(SELF);
         PMC *iter = XMLNodeIter_new(INTERP, SELF, doc->children);
         RETURN(PMC *iter);
+    }
+
+    METHOD find(STRING *xpath_str) {
+        PMC *xpath;
+        PMC *object;
+
+        xpath = XPath_new(INTERP, SELF);
+        (PMC *object) = PCCINVOKE(INTERP, xpath, "find", STRING *xpath_str);
+
+        RETURN(PMC *object);
     }
 }
 

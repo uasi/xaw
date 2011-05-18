@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "pmc_xmldoc.h"
+#include "pmc_xpath.h"
 
 
 #define DATA(self) ((xmlNodePtr)PMC_data(self))
@@ -176,6 +177,18 @@ pmclass XMLNode
 	    path_str = Parrot_str_new(INTERP, (const char *)path, 0);
 	}
 	RETURN(STRING *path_str);
+    }
+
+    METHOD find(STRING *xpath_str) {
+        PMC *doc;
+        PMC *xpath;
+        PMC *object;
+
+        (PMC *doc) = PCCINVOKE(INTERP, SELF, "doc");
+        xpath = XPath_new(INTERP, doc);
+        (PMC *object) = PCCINVOKE(INTERP, xpath, "find", STRING *xpath_str);
+
+        RETURN(PMC *object);
     }
 }
 

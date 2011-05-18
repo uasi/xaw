@@ -10,8 +10,17 @@
 BEGIN_PMC_HEADER_PREAMBLE
 
 #include <libxml/xpath.h>
+PMC *XPath_new(PARROT_INTERP, PMC *doc);
 
 END_PMC_HEADER_PREAMBLE
+
+
+PMC *XPath_new(PARROT_INTERP, PMC *doc)
+{
+    INTVAL type = Parrot_XPath_get_vtable_pointer(interp)->base_type;
+    PMC *xpath_pmc = Parrot_pmc_new_init(interp, type, doc);
+    return xpath_pmc;
+}
 
 
 pmclass XPath
@@ -24,7 +33,7 @@ pmclass XPath
     ATTR PMC *doc;
 
     VTABLE void init_pmc(PMC *pmc) {
-        PMC *doc_pmc = PMCNULL;
+        PMC *doc = PMCNULL;
         xmlXPathContextPtr context;
 
         if (VTABLE_isa(INTERP, pmc, CONST_STRING(INTERP, "XMLDoc"))) {
