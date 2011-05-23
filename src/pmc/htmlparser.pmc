@@ -1,26 +1,30 @@
 #include <parrot/parrot.h>
 #include <libxml/HTMLparser.h>
 
+#include "pointer.h"
 #include "common.h"
 #include "pmc_htmldoc.h"
 #include "pmc_htmlparsercontext.h"
 
 
-#define DATA(self) ((htmlParserCtxtPtr)PMC_data(self))
+DEFINE_POINTER_ACCESSOR(htmlParserCtxtPtr);
 
 
 pmclass HTMLParser
+    extends Pointer
     dynpmc
     group libxml_group
     lib xml2
     auto_attrs {
 
     VTABLE void init() {
-        PMC_data(SELF) = htmlNewParserCtxt();
+        SUPER();
+        PObj_custom_destroy_SET(SELF);
+        SET_PTR(SELF, htmlNewParserCtxt());
     }
 
     VTABLE void destroy() {
-        htmlParserCtxtPtr ctxt = DATA(SELF);
+        htmlParserCtxtPtr ctxt = GET_PTR(SELF);
         if (ctxt->myDoc) {
             xmlFreeDoc(ctxt->myDoc);
         }
@@ -28,7 +32,7 @@ pmclass HTMLParser
     }
 
     METHOD parse_file(STRING *filename) {
-        htmlParserCtxtPtr ctxt = DATA(SELF);
+        htmlParserCtxtPtr ctxt = GET_PTR(SELF);
         const char *filename_cstr = Parrot_str_cstring(INTERP, filename);
         htmlDocPtr doc = htmlCtxtReadFile(ctxt, filename_cstr, "utf-8", 1);
         PMC *doc_pmc = HTMLDoc_new(INTERP, doc);
@@ -36,7 +40,7 @@ pmclass HTMLParser
     }
 
     METHOD parse_string(STRING *string) {
-        htmlParserCtxtPtr ctxt = DATA(SELF);
+        htmlParserCtxtPtr ctxt = GET_PTR(SELF);
         const char *buffer = Parrot_str_cstring(INTERP, string);
         htmlDocPtr doc = htmlCtxtReadMemory(ctxt, buffer, STRING_length(string), NULL /*URL*/, "utf-8", 1);
         PMC *doc_pmc = HTMLDoc_new(INTERP, doc);

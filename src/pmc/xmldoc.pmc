@@ -1,23 +1,23 @@
 #include <parrot/parrot.h>
 #include <libxml/HTMLParser.h>
 
+#include "pointer.h"
 #include "pmc_xmlnodeiter.h"
 #include "pmc_xmlnode.h"
 #include "pmc_xpath.h"
 
 
-#define DATA(self) ((xmlDocPtr)PMC_data(self))
-
-
 BEGIN_PMC_HEADER_PREAMBLE
 
 #include <libxml/HTMLparser.h>
-PMC *XMLDoc_new(PARROT_INTERP, htmlDocPtr doc);
+PMC *XMLDoc_new(PARROT_INTERP, xmlDocPtr doc);
 
 END_PMC_HEADER_PREAMBLE
 
+DEFINE_POINTER_ACCESSOR(xmlDocPtr);
 
-PMC *XMLDoc_new(PARROT_INTERP, htmlDocPtr doc)
+
+PMC *XMLDoc_new(PARROT_INTERP, xmlDocPtr doc)
 {
     INTVAL type;
     PMC *doc_pmc;
@@ -35,6 +35,7 @@ PMC *XMLDoc_new(PARROT_INTERP, htmlDocPtr doc)
 
 
 pmclass XMLDoc
+    extends Pointer
     dynpmc
     group libxml_group
     lib xml2
@@ -45,22 +46,18 @@ pmclass XMLDoc
     }
 
     VTABLE void destroy() {
-        xmlDocPtr doc = DATA(SELF);
+        xmlDocPtr doc = GET_PTR(SELF);
         doc->_private = NULL;
         xmlFreeDoc(doc);
     }
 
-    VTABLE void *get_pointer() {
-        return DATA(SELF);
-    }
-
     VTABLE void set_pointer(void *data) {
-        PMC_data(SELF) = data;
-        DATA(SELF)->_private = SELF;
+        SUPER(data);
+        GET_PTR(SELF)->_private = SELF;
     }
 
     METHOD child() {
-        xmlDocPtr ptr = DATA(SELF);
+        xmlDocPtr ptr = GET_PTR(SELF);
         PMC *child = PMCNULL;
         if (ptr->children) {
             child = XMLNode_new(INTERP, ptr->children);
@@ -69,7 +66,7 @@ pmclass XMLDoc
     }
 
     METHOD children() {
-        xmlDocPtr doc = DATA(SELF);
+        xmlDocPtr doc = GET_PTR(SELF);
         PMC *iter = XMLNodeIter_new(INTERP, SELF, doc->children);
         RETURN(PMC *iter);
     }

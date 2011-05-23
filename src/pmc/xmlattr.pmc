@@ -1,13 +1,11 @@
 #include <parrot/parrot.h>
 #include <libxml/tree.h>
 
+#include "pointer.h"
 #include "pmc_xmldoc.h"
 #include "pmc_xmlnodeiter.h"
 #include "pmc_xmlnode.h"
 #include "pmc_xmlnamespace.h"
-
-
-#define DATA(self) ((xmlAttrPtr)PMC_data(self))
 
 
 BEGIN_PMC_HEADER_PREAMBLE
@@ -16,6 +14,8 @@ BEGIN_PMC_HEADER_PREAMBLE
 PMC *XMLAttr_new(PARROT_INTERP, xmlAttrPtr attr);
 
 END_PMC_HEADER_PREAMBLE
+
+DEFINE_POINTER_ACCESSOR(xmlAttrPtr);
 
 
 PMC *XMLAttr_new(PARROT_INTERP, xmlAttrPtr attr)
@@ -28,30 +28,24 @@ PMC *XMLAttr_new(PARROT_INTERP, xmlAttrPtr attr)
 
 
 pmclass XMLAttr
+    extends Pointer
     dynpmc
     group libxml_group
     lib xml2
     auto_attrs {
 
     VTABLE void init() {
+        SUPER();
         PObj_custom_destroy_SET(SELF);
     }
 
     VTABLE void destroy() {
-        xmlAttrPtr attr = DATA(SELF);
+        xmlAttrPtr attr = GET_PTR(SELF);
         xmlFreeProp(attr); /* XXX or xmlFreePropList? */
     }
 
-    VTABLE void *get_pointer() {
-        return DATA(SELF);
-    }
-
-    VTABLE void set_pointer(void *ptr) {
-        PMC_data(SELF) = (xmlAttrPtr)ptr;
-    }
-
     METHOD doc() {
-        xmlAttrPtr attr = DATA(SELF);
+        xmlAttrPtr attr = GET_PTR(SELF);
         PMC *doc = PMCNULL;
         if (attr->doc) {
             doc = XMLDoc_new(INTERP, attr->doc);
@@ -60,7 +54,7 @@ pmclass XMLAttr
     }
 
     METHOD parent() {
-        xmlAttrPtr attr = DATA(SELF);
+        xmlAttrPtr attr = GET_PTR(SELF);
         PMC *parent = PMCNULL;
         if (attr->parent) {
             parent = XMLNode_new(INTERP, attr->parent);
@@ -71,7 +65,7 @@ pmclass XMLAttr
     /* XXX child() and children() may be broken */
 
     METHOD child() {
-        xmlAttrPtr attr = DATA(SELF);
+        xmlAttrPtr attr = GET_PTR(SELF);
         PMC *child = PMCNULL;
         if (attr->children) {
             child = XMLNode_new(INTERP, attr->children);
@@ -80,7 +74,7 @@ pmclass XMLAttr
     }
 
     METHOD children() {
-        xmlAttrPtr attr = DATA(SELF);
+        xmlAttrPtr attr = GET_PTR(SELF);
         PMC *children = PMCNULL;
         if (attr->children) {
             children = XMLNodeIter_new(INTERP, SELF, attr->children);
@@ -89,7 +83,7 @@ pmclass XMLAttr
     }
 
     METHOD next() {
-        xmlAttrPtr attr = DATA(SELF);
+        xmlAttrPtr attr = GET_PTR(SELF);
         PMC *next = PMCNULL;
         if (attr->next) {
             next = XMLAttr_new(INTERP, attr->next);
@@ -98,7 +92,7 @@ pmclass XMLAttr
     }
 
     METHOD prev() {
-        xmlAttrPtr attr = DATA(SELF);
+        xmlAttrPtr attr = GET_PTR(SELF);
         PMC *prev = PMCNULL;
         if (attr->prev) {
             prev = XMLAttr_new(INTERP, attr->prev);
@@ -107,7 +101,7 @@ pmclass XMLAttr
     }
 
     METHOD last() {
-        xmlAttrPtr attr = DATA(SELF);
+        xmlAttrPtr attr = GET_PTR(SELF);
         PMC *last = PMCNULL;
         if (attr->last) {
             last = XMLNode_new(INTERP, attr->last);
@@ -116,7 +110,7 @@ pmclass XMLAttr
     }
 
     METHOD name() {
-        xmlAttrPtr attr = DATA(SELF);
+        xmlAttrPtr attr = GET_PTR(SELF);
         STRING *name = STRINGNULL;
         if (!attr->name) {
             name = Parrot_str_new(INTERP, (const char *)attr->name, 0);
@@ -125,7 +119,7 @@ pmclass XMLAttr
     }
 
     METHOD value() {
-        xmlAttrPtr attr = DATA(SELF);
+        xmlAttrPtr attr = GET_PTR(SELF);
         STRING *value = STRINGNULL;
         xmlChar *content = xmlNodeGetContent((xmlNodePtr)attr);
         if (!content) {

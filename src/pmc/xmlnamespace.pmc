@@ -1,8 +1,7 @@
 #include <parrot/parrot.h>
 #include <libxml/tree.h>
 
-
-#define DATA(self) ((xmlNsPtr)PMC_data(self))
+#include "pointer.h"
 
 
 BEGIN_PMC_HEADER_PREAMBLE
@@ -11,6 +10,8 @@ BEGIN_PMC_HEADER_PREAMBLE
 PMC *XMLNamespace_new(PARROT_INTERP, xmlNsPtr namespace);
 
 END_PMC_HEADER_PREAMBLE
+
+DEFINE_POINTER_ACCESSOR(xmlNsPtr);
 
 
 PMC *XMLNamespace_new(PARROT_INTERP, xmlNsPtr namespace)
@@ -29,20 +30,13 @@ pmclass XMLNamespace
     auto_namespaces {
 
     VTABLE void init() {
+        SUPER();
         PObj_custom_destroy_SET(SELF);
     }
 
     VTABLE void destroy() {
         xmlNsPtr namespace;
-        namespace = DATA(SELF);
+        namespace = GET_PTR(SELF);
         xmlFreeNs(namespace);
-    }
-
-    VTABLE void *get_pointer() {
-        return DATA(SELF);
-    }
-
-    VTABLE void set_pointer(void *ptr) {
-        PMC_data(SELF) = (xmlNsPtr)ptr;
     }
 }

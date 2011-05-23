@@ -1,6 +1,7 @@
 #include <parrot/parrot.h>
 #include <libxml/xpath.h>
 
+#include "pointer.h"
 #include "pmc_xmldoc.h"
 #include "pmc_xmlnode.h"
 #include "pmc_xmlattr.h"
@@ -14,6 +15,8 @@ PMC *XPathObject_new(PARROT_INTERP, xmlXPathObjectPtr object, PMC *doc);
 
 END_PMC_HEADER_PREAMBLE
 
+DEFINE_POINTER_ACCESSOR(xmlXPathObjectPtr);
+
 
 PMC *XPathObject_new(PARROT_INTERP, xmlXPathObjectPtr object, PMC *doc)
 {
@@ -25,12 +28,12 @@ PMC *XPathObject_new(PARROT_INTERP, xmlXPathObjectPtr object, PMC *doc)
 
 
 pmclass XPathObject
+    extends Pointer
     dynpmc
     group libxml_group
     lib xml2
     auto_attrs {
 
-    ATTR xmlXPathObjectPtr object;
     ATTR PMC *doc;
 
     VTABLE void init_pmc(PMC *pmc) {
@@ -45,25 +48,12 @@ pmclass XPathObject
     }
 
     VTABLE void destroy() {
-        xmlXPathObjectPtr object;
-        GET_ATTR_object(INTERP, SELF, object);
+        xmlXPathObjectPtr object = GET_PTR(SELF);
         xmlXPathFreeObject(object);
     }
 
-    VTABLE void *get_pointer() {
-        xmlXPathObjectPtr object;
-        GET_ATTR_object(INTERP, SELF, object);
-        return object;
-    }
-
-    VTABLE void set_pointer(void *ptr) {
-        SET_ATTR_object(INTERP, SELF, (xmlXPathObjectPtr)ptr);
-    }
-
     VTABLE INTVAL get_bool() {
-        xmlXPathObjectPtr object;
-        GET_ATTR_object(INTERP, SELF, object);
-
+        xmlXPathObjectPtr object = GET_PTR(SELF);
         if (object->type == XPATH_BOOLEAN) {
             return (INTVAL)object->boolval;
         }
@@ -71,15 +61,12 @@ pmclass XPathObject
     }
 
     VTABLE INTVAL get_integer() {
-        xmlXPathObjectPtr object;
-        GET_ATTR_object(INTERP, SELF, object);
+        xmlXPathObjectPtr object = GET_PTR(SELF);
         return (INTVAL)object->type;
     }
 
     VTABLE FLOATVAL get_number() {
-        xmlXPathObjectPtr object;
-        GET_ATTR_object(INTERP, SELF, object);
-
+        xmlXPathObjectPtr object = GET_PTR(SELF);
         if (object->type == XPATH_NUMBER) {
             return (FLOATVAL)object->floatval;
         }
@@ -87,9 +74,7 @@ pmclass XPathObject
     }
 
     VTABLE STRING *get_string() {
-        xmlXPathObjectPtr object;
-        GET_ATTR_object(INTERP, SELF, object);
-
+        xmlXPathObjectPtr object = GET_PTR(SELF);
         if (object->type == XPATH_STRING) {
             return Parrot_str_new(INTERP, (const char *)object->stringval, 0);
         }
@@ -102,7 +87,7 @@ pmclass XPathObject
         xmlNodePtr node;
         PMC *pmc;
 
-        GET_ATTR_object(INTERP, SELF, object);
+        object = GET_PTR(SELF);
 
         if (   index < 0
             || object->type != XPATH_NODESET
@@ -129,9 +114,7 @@ pmclass XPathObject
     }
 
     VTABLE INTVAL elements() {
-        xmlXPathObjectPtr object;
-        GET_ATTR_object(INTERP, SELF, object);
-
+        xmlXPathObjectPtr object = GET_PTR(SELF);
         if (object->type == XPATH_NODESET && object->nodesetval) {
             return (INTVAL)object->nodesetval->nodeNr;
         }

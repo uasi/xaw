@@ -1,12 +1,10 @@
 #include <parrot/parrot.h>
 #include <libxml/HTMLParser.h>
 
+#include "pointer.h"
 #include "common.h"
 #include "pmc_xmldoc.h"
 #include "pmc_xpath.h"
-
-
-#define DATA(self) ((xmlNodePtr)PMC_data(self))
 
 
 BEGIN_PMC_HEADER_PREAMBLE
@@ -15,6 +13,8 @@ BEGIN_PMC_HEADER_PREAMBLE
 PMC *XMLNode_new(PARROT_INTERP, xmlNodePtr node);
 
 END_PMC_HEADER_PREAMBLE
+
+DEFINE_POINTER_ACCESSOR(xmlNodePtr);
 
 
 PMC *XMLNode_new(PARROT_INTERP, xmlNodePtr node)
@@ -36,12 +36,13 @@ PMC *XMLNode_new(PARROT_INTERP, xmlNodePtr node)
 static void deregister_xml_node(xmlNodePtr node)
 {
     if (node->_private) {
-        PMC_data((PMC *)node->_private) = NULL;
+        SET_PTR((PMC *)node->_private, NULL);
     }
 }
 
 
 pmclass XMLNode
+    extends Pointer
     dynpmc
     group libxml_group
     lib xml2
@@ -53,11 +54,12 @@ pmclass XMLNode
     }
 
     VTABLE void init() {
+        SUPER();
         PObj_custom_mark_destroy_SETALL(SELF);
     }
 
     VTABLE void mark() {
-        xmlNodePtr node = DATA(SELF);
+        xmlNodePtr node = GET_PTR(SELF);
         if (!node) return;
 
         if (node->doc && node->doc->_private) {
@@ -69,7 +71,7 @@ pmclass XMLNode
     }
 
     VTABLE void destroy() {
-        xmlNodePtr node = DATA(SELF);
+        xmlNodePtr node = GET_PTR(SELF);
         if (!node) return;
 
         node->_private = NULL;
@@ -78,17 +80,13 @@ pmclass XMLNode
         }
     }
 
-    VTABLE void *get_pointer() {
-        return DATA(SELF);
-    }
-
     VTABLE void set_pointer(void *data) {
-        PMC_data(SELF) = data;
-        DATA(SELF)->_private = SELF;
+        SUPER(data);
+        GET_PTR(SELF)->_private = SELF;
     }
 
     VTABLE INTVAL get_integer() {
-        return (INTVAL)DATA(SELF)->type;
+        return (INTVAL)GET_PTR(SELF)->type;
     }
 
     METHOD type() {
@@ -98,7 +96,7 @@ pmclass XMLNode
     }
 
     METHOD name() {
-        xmlNodePtr node = DATA(SELF);
+        xmlNodePtr node = GET_PTR(SELF);
         const xmlChar *name;
         STRING *name_str;
             
@@ -126,7 +124,7 @@ pmclass XMLNode
     }
 
     METHOD content() {
-        xmlNodePtr node = DATA(SELF);
+        xmlNodePtr node = GET_PTR(SELF);
         xmlChar *content;
         STRING *content_str = STRINGNULL;
 
@@ -141,7 +139,7 @@ pmclass XMLNode
     }
 
     METHOD doc() {
-        xmlNodePtr node = DATA(SELF);
+        xmlNodePtr node = GET_PTR(SELF);
         xmlDocPtr doc = NULL;
         PMC *doc_pmc = PMCNULL;
 
@@ -168,7 +166,7 @@ pmclass XMLNode
     }
 
     METHOD parent() {
-        xmlNodePtr node = DATA(SELF);
+        xmlNodePtr node = GET_PTR(SELF);
         PMC *parent_node_pmc = PMCNULL;
         if (node->parent) {
             parent_node_pmc = XMLNode_new(INTERP, node->parent);
@@ -177,7 +175,7 @@ pmclass XMLNode
     }
 
     METHOD next() {
-        xmlNodePtr node = DATA(SELF);
+        xmlNodePtr node = GET_PTR(SELF);
         PMC *next_node_pmc = PMCNULL;
         if (node->next) {
             next_node_pmc = XMLNode_new(INTERP, node->next);
@@ -186,7 +184,7 @@ pmclass XMLNode
     }
 
     METHOD prev() {
-        xmlNodePtr node = DATA(SELF);
+        xmlNodePtr node = GET_PTR(SELF);
         PMC *prev_node_pmc = PMCNULL;
         if (node->prev) {
             prev_node_pmc = XMLNode_new(INTERP, node->prev);
@@ -195,7 +193,7 @@ pmclass XMLNode
     }
 
     METHOD path() {
-        xmlNodePtr node = DATA(SELF);
+        xmlNodePtr node = GET_PTR(SELF);
         xmlChar *path = xmlGetNodePath(node);
         STRING *path_str = STRINGNULL;
         if (path) {
