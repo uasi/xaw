@@ -4,6 +4,7 @@
 #include "pointer.h"
 #include "common.h"
 #include "pmc_xmldoc.h"
+#include "pmc_xmlnodeiter.h"
 #include "pmc_xpath.h"
 
 
@@ -172,6 +173,24 @@ pmclass XMLNode
             parent_node_pmc = XMLNode_new(INTERP, node->parent);
         }
         RETURN(PMC *parent_node_pmc);
+    }
+
+    METHOD child() {
+        xmlNodePtr xnode = GET_PTR(SELF);
+        PMC *child = PMCNULL;
+        if (xnode->children) {
+            child = XMLNode_new(INTERP, xnode->children);
+        }
+        RETURN(PMC *child);
+    }
+
+    METHOD children() {
+        xmlNodePtr xnode = GET_PTR(SELF);
+        PMC *iter = PMCNULL;
+        if (xnode->children) {
+            iter = XMLNodeIter_new(INTERP, SELF, xnode->children);
+        }
+        RETURN(PMC *iter);
     }
 
     METHOD next() {
